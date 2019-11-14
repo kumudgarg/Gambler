@@ -1,12 +1,11 @@
 #!/bin/bash -x
-bets=1
-stake=100
-win=0
-loose=0
+BETS=1
+STAKE=100
+initialStake=$STAKE
 if [ $(( RANDOM%2 )) -ge 0 ]
 then 
-	(( win++ ))
+	(( initialStake++ ))	
 else
-	(( loose++ ))
+	(( initialStake-- ))
 fi
-echo " $win $loose " 
+echo " $initialStake " 
