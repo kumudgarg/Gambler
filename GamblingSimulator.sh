@@ -2,7 +2,7 @@
 BETS=1
 STAKE=100
 initialStake=$STAKE
-if [ $(( RANDOM%2 )) -ge 0 ]
+if [ $(( RANDOM%2 )) -eq 0 ]
 then 
 	(( initialStake++ ))	
 else
