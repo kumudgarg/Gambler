@@ -14,6 +14,7 @@ looseDays=0
 maxDayAmt=0
 minDayAmt=0
 luckiestDay=0
+last=0
 unluckiestDay=0
 declare -A dayInfo
 declare -A luckyDay
@@ -89,8 +90,14 @@ function echoInfo()
 	echo "  ${daysAmountArr[@]} $luckiestDay $unluckiestDay "
 	echo "luckiestday $luckiestDay  has $maxDayAmt  amount and  unluckiestday $unluckiestDay  has $minDayAmt amount" 
 }
-gamblingPlay
-dayWiseWonLoose
-luckyUnluckyDay
-echoInfo
-
+while [ true ]
+do
+	if [ $totalAmountWinLoose -lt 0 ]
+	then
+		break
+	fi
+	gamblingPlay
+	dayWiseWonLoose
+	luckyUnluckyDay
+	echoInfo
+done
