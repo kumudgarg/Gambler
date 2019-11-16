@@ -1,54 +1,55 @@
 #!/bin/bash -x
+#<----------CONSTANTS--------------->
 BETS=1
-DAY=30
-perDayPlayAmount=100
-cashAmount=$perDayPlayAmount
-finalStake=0
-maxWinLimit=0
-minLooseLimit=0
-stakePercent=50
-percentAmountOfStake=0
-totalAmountWinLoose=0
+DAY=20
+PERDAYAMOUNT=100
+STAKEPERCENT=50
+#<--------VARIABLES----------------->
+percentAmountOfStake=$(( $(( PERDAYAMOUNT * STAKEPERCENT ))/100 ))
+maxWinLimit=$(( PERDAYAMOUNT + percentAmountOfStake ))
+minLooseLimit=$(( PERDAYAMOUNT - percentAmountOfStake )) 
+totalAmountPerDay=0
 wonDays=0
 looseDays=0
-maxDayAmt=0
-minDayAmt=0
-luckiestDay=0
-last=0
-unluckiestDay=0
-declare -A dayInfo
-declare -A luckyDay
+luckyDay=0
+unluckyDay=0
+totalAmount=0
+stake=0
+declare -A dayWiseAmountInfo
+declare -A luckyUnlucky
 function gamblingPlay()
-{
-	stackPercent
-	for(( day=1; day <= $DAY; day++ )) 
+{ 
+	stake=$PERDAYAMOUNT
+	while [ $stake -lt $maxWinLimit ] && [ $stake -gt $minLooseLimit ]
 	do
-		cashAmount=$perDayPlayAmount
-		while [ $cashAmount -lt $maxWinLimit ] && [ $cashAmount -gt $minLooseLimit ]
-		do
-			  
-			if [ $(( RANDOM%2 )) -eq 0 ]
-			then 
-				cashAmount=$(( $cashAmount + $BETS ))
-			else
-				cashAmount=$(( $cashAmount - $BETS ))
-			fi
-		done
-		dayInfo["day $day"]=$(( $cashAmount - $perDayPlayAmount ))
-		totalAmountWinLoose=$(( $totalAmountWinLoose + ${dayInfo["day $day"]} ))
-	done 
+		if [ $(( RANDOM%2 )) -eq 0 ]
+		then
+			stake=$(( $stake + $BETS ))
+		else
+			stake=$(( $stake - $BETS ))
+		fi
+	done
 }
-function stackPercent
+
+function monthlyBet()
 {
-	percentAmountOfStake=$(( $(( perDayPlayAmount * stakePercent ))/100 ))
-	maxWinLimit=$(( perDayPlayAmount + percentAmountOfStake ))
-	minLooseLimit=$(( perDayPlayAmount - percentAmountOfStake )) 
+	for (( day=1; day <= $DAY; day++ )) 
+	do
+		gamblingPlay
+		totalAmountPerDay=0
+	   dayWiseAmountInfo[$day]=$(( $stake - $PERDAYAMOUNT ))
+	   totalAmountPerDay=$(( $toalAmountPerDay + ${dayWiseAmountInfo[$day]} ))
+	   echo "Total amount per day $totalAmountPerDay"
+		totalAmount=$(( totalAmount+totalAmountPerDay ))
+	   luckyUnlucky[$day]=$totalAmount
+	done
 }
+
 function dayWiseWonLoose()
 {
-	for (( day=0; day<=$DAY; day++ ))
+	for (( day=1; day<=$DAY; day++ ))
 	do
-		if [ ${dayInfo["day $day"]} -gt 0 ]
+		if [ ${dayWiseAmountInfo[$day]} -gt 0 ]
 		then 
 			(( wonDays++ ))
 		else
@@ -60,44 +61,33 @@ function dayWiseWonLoose()
 }
 function luckyUnluckyDay()
 {
-	daysAmountArr[0]=0
-	for (( day=1; day<=$DAY; day++ ))
-	do 
-		daysAmountArr[ $day ]=$(( ${daysAmountArr[ $(($day-1)) ]} + ${dayInfo["day $day"]} ))
-	done
-	for (( day=1; day<=$DAY; day++ ))
-	do 
-		if [ $maxDayAmt -gt ${daysAmountArr[ $day ]} ]
-		then
-			minDayAmt=${daysAmountArr[ $day ]}
-			(( luckiestDay++ ))
-		else
-			maxDayAmt=${daysAmountArr[ $day ]}
-			(( unluckiestDay++ ))
-		fi
-	done
-}
-function echoInfo()
-{
-	echo "final stake are $initialStake "
-	echo "maximum win limit $maxWinLimit "
-	echo "minimum loose limit $minLooseLimit "
-	echo "total amount win / loose $totalAmountWinLoose"
-	echo " ${dayInfo[@]}"
+	luckyDay=$( printf "%s\n" ${luckyUnlucky[@]} | sort -nr | head -1 )
+	unluckyDay=$( printf "%s\n" ${luckyUnlucky[@]} | sort -nr | tail -1 )
+   for data in "${!luckyUnlucky[@]}"
+    do
+	    if [[ ${luckyUnlucky[$data]} -eq luckyDay ]]
+	    then
+	    	echo "Lucky Day $data by $luckyDay"
+		 elif [[ ${luckyUnlucky[$data]} -eq unluckyDay ]]
+		 then
+				 echo "Lucky Day $data by $UnluckyDay"
 
-	echo "win days are $wonDays and total amount of $wonDays are $amountWin "
-	echo "win days are $looseDays and total amount of $looseDays are $amountLoose " 
-	echo "  ${daysAmountArr[@]} $luckiestDay $unluckiestDay "
-	echo "luckiestday $luckiestDay  has $maxDayAmt  amount and  unluckiestday $unluckiestDay  has $minDayAmt amount" 
+	    fi
+    done
+
 }
 while [ true ]
 do
-	if [ $totalAmountWinLoose -lt 0 ]
+	if [ $totalAmountPerDay -lt 0 ]
 	then
 		break
 	fi
-	gamblingPlay
+	monthlyBet
 	dayWiseWonLoose
 	luckyUnluckyDay
-	echoInfo
 done
+         echo "total amount win / loose $totalAmount"
+         echo "win days are $wonDays and total amount of $wonDays are $amountWin "
+         echo "loose days are $looseDays and total amount of $looseDays are $amountLoose " 
+      
+
